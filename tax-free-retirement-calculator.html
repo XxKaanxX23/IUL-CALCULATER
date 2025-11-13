@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tax-Free Retirement Calculator</title>
+    <style>
+      :root {
+        --blue: #2563eb;
+        --blue-dark: #1d4ed8;
+        --green: #059669;
+        --red: #dc2626;
+        --card-bg: #ffffff;
+        --muted: #6b7280;
+        --bg: #f3f5fb;
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: #0f172a;
+      }
+
+      main {
+        padding: 48px 16px 64px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 3vw, 2.5rem);
+        text-align: center;
+        color: #0f172a;
+      }
+
+      .subtitle {
+        margin: 12px auto 32px;
+        max-width: 620px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .calculator-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.1);
+        padding: 32px;
+      }
+
+      .calculator-grid {
+        display: flex;
+        gap: 28px;
+      }
+
+      .input-column,
+      .results-column {
+        flex: 1;
+        min-width: 0;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      label {
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input[type="number"]:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border: 1px solid #dbe2f2;
+        border-radius: 12px;
+        background: #f8fafc;
+        gap: 16px;
+      }
+
+      .toggle-label {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .switch {
+        position: relative;
+        width: 46px;
+        height: 26px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5f5;
+        transition: 0.3s;
+        border-radius: 999px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+      }
+
+      .switch input:checked + .slider {
+        background-color: var(--blue);
+      }
+
+      .switch input:checked + .slider:before {
+        transform: translateX(20px);
+      }
+
+      button {
+        margin-top: 4px;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(120deg, var(--blue), #3b82f6);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button:hover {
+        box-shadow: 0 10px 18px rgba(37, 99, 235, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .disclaimer {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+
+      .error-message {
+        display: none;
+        color: var(--red);
+        font-weight: 600;
+        margin-top: 8px;
+      }
+
+      .results-card {
+        background: #0f172a;
+        color: #f8fafc;
+        border-radius: 16px;
+        padding: 24px;
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+        pointer-events: none;
+      }
+
+      .results-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .results-section {
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      }
+
+      .results-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .section-title {
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(248, 250, 252, 0.75);
+        margin: 0 0 10px;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+
+      .stat-pill {
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(15, 23, 42, 0.4);
+      }
+
+      .stat-pill span {
+        display: block;
+        font-size: 0.85rem;
+        color: rgba(248, 250, 252, 0.75);
+      }
+
+      .stat-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 6px;
+        color: #ffffff;
+      }
+
+      .highlight {
+        color: var(--green);
+      }
+
+      .danger {
+        color: var(--red);
+      }
+
+      .tax-visual {
+        background: rgba(15, 23, 42, 0.25);
+        border-radius: 12px;
+        padding: 14px;
+        margin-top: 10px;
+      }
+
+      .tax-bar {
+        margin-top: 10px;
+      }
+
+      .bar-label {
+        font-size: 0.85rem;
+        color: rgba(248, 250, 252, 0.75);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .bar-track {
+        margin-top: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        height: 8px;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.4s ease;
+      }
+
+      .bar-fill.red {
+        background: var(--red);
+      }
+
+      .bar-fill.green {
+        background: var(--green);
+      }
+
+      .recommendation-card {
+        background: rgba(37, 99, 235, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.6);
+        border-radius: 14px;
+        padding: 16px;
+        color: #e0ecff;
+      }
+
+      .recommendation-card strong {
+        color: #ffffff;
+      }
+
+      @media (max-width: 900px) {
+        .calculator-card {
+          padding: 24px;
+        }
+
+        .calculator-grid {
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 600px) {
+        button {
+          width: 100%;
+        }
+
+        .toggle-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <h1>Tax-Free Retirement Calculator</h1>
+        <p class="subtitle">
+          Stress-test your nest egg against taxes and crashes, then pivot to a tax-free growth plan
+          built for high-income earners.
+        </p>
+
+        <div class="calculator-card">
+          <div class="calculator-grid">
+            <section class="input-column">
+              <form id="calculatorForm" novalidate>
+                <div class="input-group">
+                  <label for="currentAge">Current Age</label>
+                  <input
+                    type="number"
+                    id="currentAge"
+                    min="18"
+                    max="70"
+                    placeholder="e.g. 38"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="retirementAge">Desired Retirement Age</label>
+                  <input
+                    type="number"
+                    id="retirementAge"
+                    min="40"
+                    max="80"
+                    value="65"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="currentSavings">Current Retirement Savings ($)</label>
+                  <input
+                    type="number"
+                    id="currentSavings"
+                    min="0"
+                    placeholder="e.g. 25000"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="monthlyContribution">Monthly Retirement Contribution ($)</label>
+                  <input
+                    type="number"
+                    id="monthlyContribution"
+                    min="0"
+                    placeholder="e.g. 1500"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="annualIncome">Annual Income ($)</label>
+                  <input
+                    type="number"
+                    id="annualIncome"
+                    min="0"
+                    placeholder="e.g. 220000"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="currentTaxRate">Current Effective Tax Rate (%)</label>
+                  <input
+                    type="number"
+                    id="currentTaxRate"
+                    min="0"
+                    max="50"
+                    placeholder="e.g. 24"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="currentReturnRate">Expected Annual Return - Current Path (%)</label>
+                  <input
+                    type="number"
+                    id="currentReturnRate"
+                    min="0"
+                    max="15"
+                    placeholder="e.g. 7"
+                    value="7"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label for="taxFreeReturnRate">Expected Annual Return - Tax-Free Strategy (%)</label>
+                  <input
+                    type="number"
+                    id="taxFreeReturnRate"
+                    min="0"
+                    max="15"
+                    placeholder="e.g. 6"
+                    value="6"
+                    required
+                  />
+                </div>
+
+                <div class="toggle-row">
+                  <span class="toggle-label">Simulate Market Crashes (–30% every 6 years)</span>
+                  <label class="switch">
+                    <input type="checkbox" id="crashToggle" checked />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <button type="button" id="calculateBtn">Calculate My Projection</button>
+                <p class="disclaimer">
+                  All results are hypothetical and created for educational conversations only.
+                </p>
+                <p class="error-message" id="errorMessage" aria-live="polite"></p>
+              </form>
+            </section>
+
+            <section class="results-column">
+              <div class="results-card" id="resultsCard" aria-hidden="true">
+                <div class="results-section" id="sectionSnapshot">
+                  <h3 class="section-title">A) Retirement Snapshot</h3>
+                  <div class="stat-grid">
+                    <div class="stat-pill">
+                      <span>Years until retirement</span>
+                      <div class="stat-value" id="yearsToRetireOutput">-</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Current plan net income</span>
+                      <div class="stat-value danger" id="netIncomeCurrentOutput">$0 / yr</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Tax-free income</span>
+                      <div class="stat-value highlight" id="netIncomeTaxFreeOutput">$0 / yr</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="results-section" id="sectionLosses">
+                  <h3 class="section-title">B) Your Current Plan's Hidden Losses</h3>
+                  <div class="stat-grid">
+                    <div class="stat-pill">
+                      <span>Gross income (current)</span>
+                      <div class="stat-value" id="grossIncomeCurrentOutput">$0 / yr</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Taxes on income</span>
+                      <div class="stat-value danger" id="taxesOnIncomeOutput">$0 / yr</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Market losses from crashes</span>
+                      <div class="stat-value danger" id="marketLossesOutput">$0</div>
+                    </div>
+                  </div>
+                  <div class="tax-visual">
+                    <div class="bar-label">
+                      <span>Current path taxes over 25 yrs</span>
+                      <strong id="lifetimeTaxesCurrentOutput">$0</strong>
+                    </div>
+                    <div class="bar-track">
+                      <div class="bar-fill red" id="taxBarCurrentFill" style="width: 0%"></div>
+                    </div>
+                    <div class="tax-bar">
+                      <div class="bar-label">
+                        <span>Tax-free path taxes</span>
+                        <strong class="highlight">$0</strong>
+                      </div>
+                      <div class="bar-track">
+                        <div class="bar-fill green" id="taxBarTaxFreeFill" style="width: 0%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="results-section" id="sectionProtected">
+                  <h3 class="section-title">C) Your Tax-Free Protected Plan</h3>
+                  <div class="stat-grid">
+                    <div class="stat-pill">
+                      <span>Projected income (gross)</span>
+                      <div class="stat-value highlight" id="grossIncomeTaxFreeOutput">$0 / yr</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Account value at retirement</span>
+                      <div class="stat-value highlight" id="fvTaxFreeOutput">$0</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Protection from crashes</span>
+                      <div class="stat-value highlight" id="crashProtectionOutput">Yes</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="results-section" id="sectionDifference">
+                  <h3 class="section-title">D) The Difference</h3>
+                  <div class="stat-grid">
+                    <div class="stat-pill">
+                      <span>Tax savings (25 yrs)</span>
+                      <div class="stat-value highlight" id="taxSavingsOutput">$0</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Market losses avoided</span>
+                      <div class="stat-value highlight" id="marketAvoidedOutput">$0</div>
+                    </div>
+                    <div class="stat-pill">
+                      <span>Extra lifetime income</span>
+                      <div class="stat-value highlight" id="extraLifetimeIncomeOutput">$0</div>
+                    </div>
+                  </div>
+                  <p class="disclaimer" id="extraNetAnnualIncomeOutput">$0 more net income each year.</p>
+                </div>
+
+                <div class="results-section" id="sectionRecommendation">
+                  <h3 class="section-title">E) Personalized Recommendation</h3>
+                  <div class="recommendation-card">
+                    <p id="contributionRecommendation">
+                      Recommended monthly contribution for your income: —
+                    </p>
+                    <p id="retirementGapOutput">
+                      Your current plan leaves you $0 short of your ideal retirement income.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const formatCurrency = (value) => {
+        if (!isFinite(value)) return "$0";
+        const rounded = Math.round(value);
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        }).format(rounded);
+      };
+
+      const simulateGrowth = (principal, annualContribution, annualRate, years, options = {}) => {
+        const { includeCrashes = false, protectFromCrashes = false } = options;
+        let balance = principal;
+        if (years <= 0) return balance;
+
+        for (let year = 1; year <= years; year += 1) {
+          const growthRate = Math.max(annualRate, 0);
+          balance *= 1 + growthRate;
+
+          if (includeCrashes && !protectFromCrashes && year % 6 === 0) {
+            balance *= 0.7; // simulate -30% drop
+          }
+
+          balance += annualContribution;
+        }
+
+        return balance;
+      };
+
+      const showError = (message) => {
+        const errorEl = document.getElementById("errorMessage");
+        errorEl.textContent = message;
+        errorEl.style.display = "block";
+      };
+
+      const hideError = () => {
+        const errorEl = document.getElementById("errorMessage");
+        errorEl.textContent = "";
+        errorEl.style.display = "none";
+      };
+
+      const getContributionRecommendation = (income) => {
+        if (income >= 250000) return "$2,000 - $5,000";
+        if (income >= 120000) return "$800 - $2,000";
+        if (income >= 70000) return "$300 - $800";
+        return "$200 - $600";
+      };
+
+      document.getElementById("calculateBtn").addEventListener("click", () => {
+        const getNumber = (id) => Number(document.getElementById(id).value);
+
+        const currentAge = getNumber("currentAge");
+        const retirementAge = getNumber("retirementAge");
+        const currentSavings = getNumber("currentSavings");
+        const monthlyContribution = getNumber("monthlyContribution");
+        const annualIncome = getNumber("annualIncome");
+        const currentTaxRate = getNumber("currentTaxRate");
+        const currentReturnRate = getNumber("currentReturnRate");
+        const taxFreeReturnRate = getNumber("taxFreeReturnRate");
+        const simulateCrashes = document.getElementById("crashToggle").checked;
+
+        const inputs = [
+          currentAge,
+          retirementAge,
+          currentSavings,
+          monthlyContribution,
+          annualIncome,
+          currentTaxRate,
+          currentReturnRate,
+          taxFreeReturnRate,
+        ];
+
+        if (inputs.some((value) => Number.isNaN(value))) {
+          showError("Please fill in all fields with valid numbers.");
+          return;
+        }
+
+        if (retirementAge <= currentAge) {
+          showError("Retirement age must be greater than current age.");
+          return;
+        }
+
+        hideError();
+
+        const yearsToRetire = retirementAge - currentAge;
+        const annualContribution = monthlyContribution * 12;
+        const rCurrent = currentReturnRate / 100;
+        const rTaxFree = taxFreeReturnRate / 100;
+        const taxRate = currentTaxRate / 100;
+        const withdrawalRate = 0.04;
+        const retirementYears = 25;
+
+        const futureValueCurrent = simulateGrowth(
+          currentSavings,
+          annualContribution,
+          rCurrent,
+          yearsToRetire,
+          { includeCrashes: simulateCrashes, protectFromCrashes: false }
+        );
+
+        const futureValueTaxFree = simulateGrowth(
+          currentSavings,
+          annualContribution,
+          rTaxFree,
+          yearsToRetire,
+          { includeCrashes: simulateCrashes, protectFromCrashes: true }
+        );
+
+        const futureValueCurrentNoCrash = simulateGrowth(
+          currentSavings,
+          annualContribution,
+          rCurrent,
+          yearsToRetire,
+          { includeCrashes: false, protectFromCrashes: false }
+        );
+
+        const grossIncomeCurrent = futureValueCurrent * withdrawalRate;
+        const taxesOnRetirement = grossIncomeCurrent * taxRate;
+        const netIncomeCurrent = grossIncomeCurrent - taxesOnRetirement;
+
+        const grossIncomeTaxFree = futureValueTaxFree * withdrawalRate;
+        const netIncomeTaxFree = grossIncomeTaxFree;
+
+        const lifetimeTaxesCurrent = taxesOnRetirement * retirementYears;
+        const taxSavings = lifetimeTaxesCurrent;
+        const extraNetAnnualIncome = netIncomeTaxFree - netIncomeCurrent;
+        const extraLifetimeIncome = extraNetAnnualIncome * retirementYears;
+        const marketLosses = Math.max(0, futureValueCurrentNoCrash - futureValueCurrent);
+        const marketLossesAvoided = simulateCrashes ? marketLosses : 0;
+
+        const idealIncome = Math.max(60000, annualIncome * 0.7);
+        const retirementGap = Math.max(0, idealIncome - netIncomeCurrent);
+        const recommendation = getContributionRecommendation(annualIncome);
+
+        document.getElementById("yearsToRetireOutput").textContent = yearsToRetire;
+        document.getElementById("netIncomeCurrentOutput").textContent = `${formatCurrency(
+          netIncomeCurrent
+        )} / yr`;
+        document.getElementById("netIncomeTaxFreeOutput").textContent = `${formatCurrency(
+          netIncomeTaxFree
+        )} / yr`;
+
+        document.getElementById("grossIncomeCurrentOutput").textContent = `${formatCurrency(
+          grossIncomeCurrent
+        )} / yr`;
+        document.getElementById("taxesOnIncomeOutput").textContent = `${formatCurrency(
+          taxesOnRetirement
+        )} / yr`;
+        document.getElementById("marketLossesOutput").textContent = formatCurrency(marketLosses);
+        document.getElementById("lifetimeTaxesCurrentOutput").textContent =
+          formatCurrency(lifetimeTaxesCurrent);
+
+        document.getElementById("grossIncomeTaxFreeOutput").textContent = `${formatCurrency(
+          grossIncomeTaxFree
+        )} / yr`;
+        document.getElementById("fvTaxFreeOutput").textContent = formatCurrency(
+          futureValueTaxFree
+        );
+
+        document.getElementById("crashProtectionOutput").textContent = simulateCrashes
+          ? "Guaranteed floor"
+          : "On standby";
+
+        document.getElementById("taxSavingsOutput").textContent = formatCurrency(taxSavings);
+        document.getElementById("marketAvoidedOutput").textContent = formatCurrency(
+          marketLossesAvoided
+        );
+        document.getElementById("extraLifetimeIncomeOutput").textContent =
+          formatCurrency(extraLifetimeIncome);
+        document.getElementById("extraNetAnnualIncomeOutput").textContent = `${formatCurrency(
+          extraNetAnnualIncome
+        )} more net income each year.`;
+
+        document.getElementById(
+          "contributionRecommendation"
+        ).textContent = `Recommended monthly contribution for your income: ${recommendation}`;
+
+        document.getElementById("retirementGapOutput").textContent =
+          retirementGap > 0
+            ? `Your current plan leaves you ${formatCurrency(
+                retirementGap
+              )} short of your ideal retirement income.`
+            : "Your current plan meets (or exceeds) your ideal retirement income target.";
+
+        const taxBarCurrentFill = document.getElementById("taxBarCurrentFill");
+        const taxBarTaxFreeFill = document.getElementById("taxBarTaxFreeFill");
+        const maxTax = Math.max(lifetimeTaxesCurrent, 1);
+        taxBarCurrentFill.style.width = "100%";
+        taxBarTaxFreeFill.style.width = `${(0 / maxTax) * 100}%`;
+
+        const resultsCard = document.getElementById("resultsCard");
+        resultsCard.classList.add("visible");
+        resultsCard.setAttribute("aria-hidden", "false");
+        resultsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    </script>
+  </body>
+</html>

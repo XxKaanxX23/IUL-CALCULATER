@@ -1,0 +1,221 @@
+Create a single-page "Tax-Free Retirement Calculator" using ONLY HTML, CSS, and vanilla JavaScript. No external libraries or frameworks.
+
+Requirements:
+
+1. FILE STRUCTURE
+- One single HTML file that includes:
+  - A complete HTML5 document
+  - Internal <style> tag for CSS
+  - Internal <script> tag for JavaScript
+- Everything must work just by opening the HTML file in a browser.
+
+2. PAGE LAYOUT & DESIGN
+- Centered container with a max width of 900px.
+- Clean, modern design: light background, white card container, soft shadows, rounded corners.
+- Use a simple, sans-serif font (e.g., system font stack).
+- Layout:
+  - Page title at the top: "Tax-Free Retirement Calculator"
+  - Short subtitle text: "Compare your current path vs a tax-efficient strategy in minutes."
+  - Two-column layout on desktop:
+    - Left column: input form
+    - Right column: results
+  - On mobile, stack columns vertically.
+
+3. INPUT FORM (LEFT COLUMN)
+Create a form with labeled inputs. Use <label> and <input> properly. Each input should have a clear label and placeholder. Use type="number" where appropriate.
+
+Inputs (with IDs):
+
+1) Current Age
+   - id="currentAge"
+   - type="number"
+   - min="18", max="70"
+
+2) Desired Retirement Age
+   - id="retirementAge"
+   - type="number"
+   - default value: 65
+
+3) Current Retirement Savings ($)
+   - id="currentSavings"
+   - type="number"
+   - placeholder="e.g. 25000"
+
+4) Monthly Retirement Contribution ($)
+   - id="monthlyContribution"
+   - type="number"
+   - placeholder="e.g. 1000"
+
+5) Annual Income ($)
+   - id="annualIncome"
+   - type="number"
+   - placeholder="e.g. 150000"
+
+6) Current Effective Tax Rate (%)
+   - id="currentTaxRate"
+   - type="number"
+   - placeholder="e.g. 24"
+   - This represents approximate combined tax rate in retirement for the “tax-deferred” scenario.
+
+7) Expected Annual Return - Current Path (%)
+   - id="currentReturnRate"
+   - type="number"
+   - placeholder="e.g. 7"
+   - Default: 7
+
+8) Expected Annual Return - Tax-Free Strategy (%)
+   - id="taxFreeReturnRate"
+   - type="number"
+   - placeholder="e.g. 6"
+   - Default: 6
+
+Below the inputs:
+- A primary button:
+  - text: "Calculate My Projection"
+  - id="calculateBtn"
+
+- Under the button, show a small note:
+  - "All results are hypothetical and for educational purposes only."
+
+4. CALCULATION LOGIC (JAVASCRIPT)
+
+On click of the "Calculate My Projection" button:
+
+1) Validate inputs:
+   - Ensure required fields are not empty.
+   - Ensure ages make sense (retirementAge > currentAge).
+   - If invalid, show a simple inline error message at the top or near the button, and do not calculate.
+
+2) Basic calculations:
+
+   Let:
+   - currentAge
+   - retirementAge
+   - yearsToRetire = retirementAge - currentAge
+   - currentSavings (initial principal P0)
+   - monthlyContribution (user input)
+   - annualContribution = monthlyContribution * 12
+   - rCurrent = currentReturnRate / 100
+   - rTaxFree = taxFreeReturnRate / 100
+   - taxRate = currentTaxRate / 100
+
+   Assume annual compounding and contributions at year-end for simplicity.
+
+   Future Value formula for current (tax-deferred) path:
+   - FV_current = P0 * (1 + rCurrent)^n + annualContribution * [((1 + rCurrent)^n - 1) / rCurrent]
+     where n = yearsToRetire
+
+   Future Value for tax-free path:
+   - FV_taxFree = P0 * (1 + rTaxFree)^n + annualContribution * [((1 + rTaxFree)^n - 1) / rTaxFree]
+
+   Estimate retirement income using a simple withdrawal rate (e.g., 4% rule):
+   - withdrawalRate = 0.04
+
+   For current path (taxable in retirement):
+   - grossIncomeCurrent = FV_current * withdrawalRate
+   - taxesOnRetirement = grossIncomeCurrent * taxRate
+   - netIncomeCurrent = grossIncomeCurrent - taxesOnRetirement
+
+   For tax-free path:
+   - grossIncomeTaxFree = FV_taxFree * withdrawalRate
+   - taxesOnTaxFree = 0
+   - netIncomeTaxFree = grossIncomeTaxFree
+
+   Estimate “lifetime taxes lost” over 25 years of retirement:
+   - retirementYears = 25
+   - lifetimeTaxesCurrent = taxesOnRetirement * retirementYears
+
+   Differences:
+   - extraNetAnnualIncome = netIncomeTaxFree - netIncomeCurrent
+   - extraLifetimeIncome = extraNetAnnualIncome * retirementYears
+
+3) Handle edge cases:
+   - If rCurrent or rTaxFree is 0, handle division by zero safely by treating contribution growth as linear (no compound growth).
+
+5. RESULTS DISPLAY (RIGHT COLUMN)
+
+Create a results panel with clear sections and big, readable numbers.
+
+Use these IDs for dynamic text updates:
+
+- span id="yearsToRetireOutput"
+- span id="fvCurrentOutput"
+- span id="fvTaxFreeOutput"
+- span id="netIncomeCurrentOutput"
+- span id="netIncomeTaxFreeOutput"
+- span id="lifetimeTaxesCurrentOutput"
+- span id="extraNetAnnualIncomeOutput"
+- span id="extraLifetimeIncomeOutput"
+
+Structure:
+
+SECTION 1: Summary
+- "Years until retirement: X years"
+
+SECTION 2: Projected Account Value at Retirement
+- "Current path (tax-deferred): $X"
+- "Tax-free strategy: $Y"
+
+SECTION 3: Estimated Annual Retirement Income (After Tax)
+- "Current path net income: $X / year"
+- "Tax-free income: $Y / year"
+
+SECTION 4: Taxes & Difference
+- "Estimated taxes paid in retirement on current path: $X (over 25 years)"
+- "Additional net annual income with tax-free strategy: $X / year"
+- "Additional net lifetime income (25 years): $X"
+
+All currency values should be:
+- Rounded to nearest dollar
+- Displayed with thousand separators and a dollar sign (e.g., $1,234,567)
+
+Use a small helper function like formatCurrency(number) to format the values.
+
+6. UX DETAILS
+
+- When the user clicks "Calculate", scroll smoothly to the results card (if results are below the fold).
+- Before calculation, hide the results section or show a placeholder.
+- After a successful calculation, reveal the results section with a subtle fade-in or transition (CSS only).
+- If there is a validation error, show a red error message below the button. Example text:
+  - "Please fill in all fields and make sure retirement age is greater than current age."
+
+7. STYLING (CSS)
+
+- Use a main container with padding and max-width: 900px; margin: 40px auto;
+- Card:
+  - background: white
+  - border-radius: 10px
+  - box-shadow: 0 10px 30px rgba(0,0,0,0.08)
+  - padding: 24px 28px
+- Inputs:
+  - Full width
+  - Padding: 8–10px
+  - Border-radius: 6px
+  - Border: 1px solid #ddd
+  - On focus: border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59,130,246,0.15)
+- Button:
+  - Background: #2563eb
+  - Color: white
+  - Padding: 10px 16px
+  - Border-radius: 999px
+  - Border: none
+  - Font-weight: 600
+  - Cursor: pointer
+  - Hover: slightly darker background color
+
+- Results:
+  - Use subtle section headers (uppercase, small tracking)
+  - Use larger font-size for the main numbers
+
+- Make the layout responsive:
+  - On screens wider than 768px, show form and results side by side (flexbox with gap).
+  - On smaller screens, stack them vertically.
+
+8. CODE QUALITY
+
+- Use modern JavaScript (let/const, arrow functions where appropriate).
+- Keep all logic in the <script> at the bottom of the HTML.
+- No console.log spam in the final code.
+- Comment the main steps of the calculation so it’s easy to understand.
+
+Deliver the final answer as a single complete HTML file with embedded CSS and JavaScript that implements everything described above.
